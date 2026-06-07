@@ -1,0 +1,13 @@
+1. in html : The <script> tag loads main.jsx which starts everything.
+
+2. useState returns two things in an array:
+
+   liked -- the current value
+   setLiked -- the function you call to change it
+
+   You never change state directly like liked = true. Always use the setter function.
+
+3. useState  = stores data that changes
+   useEffect = runs code when something happens
+
+4. 
