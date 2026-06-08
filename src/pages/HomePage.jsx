@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import useFetch from '../hooks/useFetch'
+import { useState, useEffect } from 'react'
 import MovieCard from '../components/MovieCard'
 import '../components/MovieCard.css'
 
@@ -21,16 +20,58 @@ function HomePage() {
   const [query, setQuery] = useState("")
   const [searchTerm, setSearchTerm] = useState("")
   const [activeGenre, setActiveGenre] = useState(null)
+  const [page, setPage] = useState(1)
+  const [movies, setMovies] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [error, setError] = useState(null)
+  const [totalPages, setTotalPages] = useState(1)
 
-  // Build URL based on what user is doing
-  const url = searchTerm
-    ? `https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(searchTerm)}`
-    : activeGenre
-    ? `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&with_genres=${activeGenre}&sort_by=popularity.desc`
-    : `https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}`
+  // Build URL based on current state
+  function buildUrl(pageNum) {
+    if (searchTerm) {
+      return `https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(searchTerm)}&page=${pageNum}`
+    }
+    if (activeGenre) {
+      return `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&with_genres=${activeGenre}&sort_by=popularity.desc&page=${pageNum}`
+    }
+    return `https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}&page=${pageNum}`
+  }
 
-  const { data, loading, error } = useFetch(url)
-  const movies = data?.results || []
+  // Fetch fresh results (page 1) whenever search or genre changes
+  useEffect(() => {
+    setLoading(true)
+    setError(null)
+    setPage(1)
+    setMovies([])
+
+    fetch(buildUrl(1))
+      .then(r => { if (!r.ok) throw new Error('Failed'); return r.json() })
+      .then(data => {
+        setMovies(data.results || [])
+        setTotalPages(Math.min(data.total_pages, 20)) // TMDB caps at 500 pages, we limit to 20
+        setLoading(false)
+      })
+      .catch(err => {
+        setError(err.message)
+        setLoading(false)
+      })
+  }, [searchTerm, activeGenre])
+
+  // Load more -- append to existing movies
+  function loadMore() {
+    const nextPage = page + 1
+    setLoadingMore(true)
+
+    fetch(buildUrl(nextPage))
+      .then(r => r.json())
+      .then(data => {
+        setMovies(prev => [...prev, ...(data.results || [])])
+        setPage(nextPage)
+        setLoadingMore(false)
+      })
+      .catch(() => setLoadingMore(false))
+  }
 
   function handleSearch() {
     if (query.trim()) {
@@ -73,35 +114,25 @@ function HomePage() {
           onChange={e => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           style={{
-            flex: 1,
-            background: "#1e1e2a",
-            border: "1px solid #2a2a3a",
-            color: "#e8e6f0",
-            padding: "10px 16px",
-            borderRadius: "8px",
-            fontSize: "14px",
-            outline: "none"
+            flex: 1, background: "#1e1e2a",
+            border: "1px solid #2a2a3a", color: "#e8e6f0",
+            padding: "10px 16px", borderRadius: "8px",
+            fontSize: "14px", outline: "none"
           }}
         />
-        <button
-          onClick={handleSearch}
-          style={{
-            background: "#e63946", border: "none", color: "#fff",
-            padding: "10px 20px", borderRadius: "8px",
-            cursor: "pointer", fontSize: "14px"
-          }}
-        >
+        <button onClick={handleSearch} style={{
+          background: "#e63946", border: "none", color: "#fff",
+          padding: "10px 20px", borderRadius: "8px",
+          cursor: "pointer", fontSize: "14px"
+        }}>
           Search
         </button>
         {(searchTerm || activeGenre) && (
-          <button
-            onClick={handleClear}
-            style={{
-              background: "transparent", border: "1px solid #2a2a3a",
-              color: "#888899", padding: "10px 16px", borderRadius: "8px",
-              cursor: "pointer", fontSize: "14px"
-            }}
-          >
+          <button onClick={handleClear} style={{
+            background: "transparent", border: "1px solid #2a2a3a",
+            color: "#888899", padding: "10px 16px", borderRadius: "8px",
+            cursor: "pointer", fontSize: "14px"
+          }}>
             Clear
           </button>
         )}
@@ -110,17 +141,13 @@ function HomePage() {
       {/* Genre filters */}
       <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "24px" }}>
         {GENRES.map(genre => (
-          <button
-            key={genre.id}
-            onClick={() => handleGenre(genre.id)}
-            style={{
-              background: activeGenre === genre.id ? "#e63946" : "#1e1e2a",
-              border: activeGenre === genre.id ? "1px solid #e63946" : "1px solid #2a2a3a",
-              color: activeGenre === genre.id ? "#fff" : "#888899",
-              padding: "5px 14px", borderRadius: "20px",
-              cursor: "pointer", fontSize: "12px"
-            }}
-          >
+          <button key={genre.id} onClick={() => handleGenre(genre.id)} style={{
+            background: activeGenre === genre.id ? "#e63946" : "#1e1e2a",
+            border: activeGenre === genre.id ? "1px solid #e63946" : "1px solid #2a2a3a",
+            color: activeGenre === genre.id ? "#fff" : "#888899",
+            padding: "5px 14px", borderRadius: "20px",
+            cursor: "pointer", fontSize: "12px"
+          }}>
             {genre.name}
           </button>
         ))}
@@ -128,9 +155,9 @@ function HomePage() {
 
       {/* Section label */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-        <h2 style={{ fontSize: "18px", fontWeight: "500" }}>{sectionLabel}</h2>
+        <h2 style={{ fontSize: "18px", fontWeight: "500", color: "#fff" }}>{sectionLabel}</h2>
         {movies.length > 0 && (
-          <span style={{ fontSize: "13px", color: "#888899" }}>{movies.length} movies</span>
+          <span style={{ fontSize: "13px", color: "#888899" }}>{movies.length} movies loaded</span>
         )}
       </div>
 
@@ -143,22 +170,43 @@ function HomePage() {
       )}
 
       {!loading && !error && (
-        <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
-          {movies.map(movie => (
-            <MovieCard
-              key={movie.id}
-              id={movie.id}
-              title={movie.title}
-              year={movie.release_date?.slice(0, 4)}
-              rating={movie.vote_average?.toFixed(1)}
-              poster={
-                movie.poster_path
-                  ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-                  : null
-              }
-            />
-          ))}
-        </div>
+        <>
+          <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
+            {movies.map(movie => (
+              <MovieCard
+                key={movie.id}
+                id={movie.id}
+                title={movie.title}
+                year={movie.release_date?.slice(0, 4)}
+                rating={movie.vote_average?.toFixed(1)}
+                poster={
+                  movie.poster_path
+                    ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+                    : null
+                }
+              />
+            ))}
+          </div>
+
+          {/* Load More button */}
+          {movies.length > 0 && page < totalPages && (
+            <div style={{ textAlign: "center", marginTop: "32px" }}>
+              <button
+                onClick={loadMore}
+                disabled={loadingMore}
+                style={{
+                  background: loadingMore ? "#1e1e2a" : "#e63946",
+                  border: "none", color: "#fff",
+                  padding: "12px 32px", borderRadius: "8px",
+                  cursor: loadingMore ? "not-allowed" : "pointer",
+                  fontSize: "14px", fontWeight: "500"
+                }}
+              >
+                {loadingMore ? "Loading..." : `Load More (Page ${page + 1} of ${totalPages})`}
+              </button>
+            </div>
+          )}
+        </>
       )}
 
     </div>
