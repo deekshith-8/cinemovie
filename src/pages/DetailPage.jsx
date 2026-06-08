@@ -7,25 +7,22 @@ const IMG = 'https://image.tmdb.org/t/p/w500'
 
 function DetailPage() {
 
-  // useParams reads the :id from the URL
-  // if URL is /movie/550, then id = "550"
   const { id } = useParams()
   const navigate = useNavigate()
   const { toggleWatchlist, inWatchlist } = useWatchlist()
 
-  // append_to_response=credits fetches cast in the same request
   const url = `https://api.themoviedb.org/3/movie/${id}?api_key=${API_KEY}&append_to_response=credits`
-
   const { data: movie, loading, error } = useFetch(url)
+  const { data: providers } = useFetch(
+    `https://api.themoviedb.org/3/movie/${id}/watch/providers?api_key=${API_KEY}`
+  )
 
   if (loading) return (
     <div style={{ padding: "40px", color: "#888" }}>Loading...</div>
   )
-
   if (error) return (
     <div style={{ padding: "40px", color: "#e63946" }}>Error: {error}</div>
   )
-
   if (!movie) return null
 
   const cast = movie.credits?.cast?.slice(0, 8) || []
@@ -33,81 +30,70 @@ function DetailPage() {
     ? `${Math.floor(movie.runtime / 60)}h ${movie.runtime % 60}m`
     : "N/A"
 
-  return (
-    <div style={{ padding: "30px", maxWidth: "900px", margin: "0 auto" }}>
+  const indiaProviders = providers?.results?.IN || null
+  const streaming = indiaProviders?.flatrate || []
+  const rent = indiaProviders?.rent || []
+  const buy = indiaProviders?.buy || []
+  const inTheatres = movie.release_date
+    ? new Date(movie.release_date) > new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
+    : false
 
-      {/* Back button */}
+  const noProviders = !inTheatres && streaming.length === 0 && rent.length === 0 && buy.length === 0
+
+  return (
+    <div style={{ padding: "30px", maxWidth: "960px", margin: "0 auto" }}>
+
+      {/* Back */}
       <button
         onClick={() => navigate(-1)}
         style={{
-          background: "transparent",
-          border: "1px solid #2a2a3a",
-          color: "#888899",
-          padding: "8px 16px",
-          borderRadius: "8px",
-          cursor: "pointer",
-          marginBottom: "24px",
-          fontSize: "14px"
+          background: "transparent", border: "1px solid #2a2a3a",
+          color: "#888899", padding: "7px 16px", borderRadius: "8px",
+          cursor: "pointer", marginBottom: "24px", fontSize: "13px"
         }}
       >
-        Back
+        ← Back
       </button>
 
-      {/* Movie hero section */}
-      <div style={{ display: "flex", gap: "30px", marginBottom: "30px" }}>
-
-        {/* Poster */}
+      {/* Hero */}
+      <div style={{ display: "flex", gap: "28px", marginBottom: "28px" }}>
         {movie.poster_path
-          ? <img
-              src={IMG + movie.poster_path}
-              alt={movie.title}
-              style={{ width: "200px", borderRadius: "10px", flexShrink: 0 }}
-            />
-          : <div style={{
-              width: "200px", height: "300px", background: "#1e1e2a",
-              borderRadius: "10px", flexShrink: 0
-            }} />
+          ? <img src={IMG + movie.poster_path} alt={movie.title}
+              style={{ width: "185px", borderRadius: "10px", flexShrink: 0, alignSelf: "flex-start" }} />
+          : <div style={{ width: "185px", height: "278px", background: "#1e1e2a", borderRadius: "10px", flexShrink: 0 }} />
         }
 
-        {/* Info */}
-        <div>
-          <h1 style={{ fontSize: "32px", marginBottom: "8px" }}>
+        <div style={{ flex: 1 }}>
+          <h1 style={{ fontSize: "30px", marginBottom: "6px", color: "#fff", lineHeight: 1.2 }}>
             {movie.title}
           </h1>
 
           {movie.tagline && (
-            <p style={{ color: "#888899", fontStyle: "italic", marginBottom: "16px" }}>
+            <p style={{ color: "#888899", fontStyle: "italic", marginBottom: "14px", fontSize: "13px" }}>
               "{movie.tagline}"
             </p>
           )}
 
-          {/* Stats row */}
-          <div style={{ display: "flex", gap: "24px", marginBottom: "16px" }}>
-            <div>
-              <div style={{ fontSize: "11px", color: "#888899", marginBottom: "2px" }}>RATING</div>
-              <div style={{ color: "#ffd166", fontWeight: "500" }}>★ {movie.vote_average?.toFixed(1)}</div>
-            </div>
-            <div>
-              <div style={{ fontSize: "11px", color: "#888899", marginBottom: "2px" }}>RUNTIME</div>
-              <div>{runtime}</div>
-            </div>
-            <div>
-              <div style={{ fontSize: "11px", color: "#888899", marginBottom: "2px" }}>YEAR</div>
-              <div>{movie.release_date?.slice(0, 4)}</div>
-            </div>
-            {movie.budget > 0 && (
-              <div>
-                <div style={{ fontSize: "11px", color: "#888899", marginBottom: "2px" }}>BUDGET</div>
-                <div>${(movie.budget / 1e6).toFixed(0)}M</div>
+          {/* Stats */}
+          <div style={{ display: "flex", gap: "20px", marginBottom: "14px", flexWrap: "wrap" }}>
+            {[
+              { label: "RATING", value: `★ ${movie.vote_average?.toFixed(1)}`, gold: true },
+              { label: "RUNTIME", value: runtime },
+              { label: "YEAR", value: movie.release_date?.slice(0, 4) },
+              ...(movie.budget > 0 ? [{ label: "BUDGET", value: `$${(movie.budget / 1e6).toFixed(0)}M` }] : [])
+            ].map(s => (
+              <div key={s.label}>
+                <div style={{ fontSize: "10px", color: "#888899", marginBottom: "2px", letterSpacing: ".05em" }}>{s.label}</div>
+                <div style={{ fontSize: "13px", fontWeight: "500", color: s.gold ? "#ffd166" : "#fff" }}>{s.value}</div>
               </div>
-            )}
+            ))}
           </div>
 
           {/* Genres */}
-          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "16px" }}>
+          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "14px" }}>
             {movie.genres?.map(g => (
               <span key={g.id} style={{
-                fontSize: "12px", padding: "3px 10px",
+                fontSize: "11px", padding: "3px 10px",
                 border: "1px solid #2a2a3a", borderRadius: "20px", color: "#888899"
               }}>
                 {g.name}
@@ -116,60 +102,131 @@ function DetailPage() {
           </div>
 
           {/* Overview */}
-          <p style={{ fontSize: "14px", color: "#b0afc0", lineHeight: "1.7", marginBottom: "16px" }}>
-  {movie.overview}
-</p>
+          <p style={{ fontSize: "13px", color: "#b0afc0", lineHeight: "1.7", marginBottom: "16px" }}>
+            {movie.overview}
+          </p>
 
-<button
-  onClick={() => toggleWatchlist({
-    id: movie.id,
-    title: movie.title,
-    poster_path: movie.poster_path,
-    vote_average: movie.vote_average,
-    release_date: movie.release_date
-  })}
-  style={{
-    background: inWatchlist(movie.id) ? "transparent" : "#e63946",
-    border: inWatchlist(movie.id) ? "1px solid #e63946" : "none",
-    color: inWatchlist(movie.id) ? "#e63946" : "#fff",
-    padding: "10px 24px",
-    borderRadius: "8px",
-    fontSize: "14px",
-    fontWeight: "500",
-    cursor: "pointer"
-  }}
->
-  {inWatchlist(movie.id) ? "✓ In Watchlist" : "+ Add to Watchlist"}
-</button>
+          {/* Watchlist button */}
+          <button
+            onClick={() => toggleWatchlist({
+              id: movie.id, title: movie.title,
+              poster_path: movie.poster_path,
+              vote_average: movie.vote_average,
+              release_date: movie.release_date
+            })}
+            style={{
+              background: inWatchlist(movie.id) ? "transparent" : "#e63946",
+              border: inWatchlist(movie.id) ? "1px solid #e63946" : "none",
+              color: inWatchlist(movie.id) ? "#e63946" : "#fff",
+              padding: "9px 22px", borderRadius: "8px",
+              fontSize: "13px", fontWeight: "500", cursor: "pointer"
+            }}
+          >
+            {inWatchlist(movie.id) ? "✓ In Watchlist" : "+ Add to Watchlist"}
+          </button>
         </div>
+      </div>
+
+      {/* Where to watch */}
+      <div style={{
+        background: "#111118", border: "0.5px solid #2a2a3a",
+        borderRadius: "10px", padding: "14px 18px", marginBottom: "24px"
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "14px" }}>
+          <span style={{ fontSize: "15px", fontWeight: "500", color: "#fff" }}>Where to watch</span>
+          <span style={{
+            fontSize: "11px", color: "#888899", background: "#1e1e2a",
+            padding: "2px 8px", borderRadius: "20px", border: "0.5px solid #2a2a3a"
+          }}>
+            🇮🇳 India
+          </span>
+        </div>
+
+        {noProviders && (
+          <p style={{ fontSize: "13px", color: "#888899", margin: 0 }}>
+            Not available on any platform in India right now
+          </p>
+        )}
+
+        {inTheatres && (
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
+            <span style={{ fontSize: "12px", color: "#888899", width: "75px", flexShrink: 0 }}>Theatres</span>
+            <span style={{
+              border: "1px solid #e63946", color: "#e63946",
+              fontSize: "11px", padding: "3px 12px", borderRadius: "20px"
+            }}>
+              🎬 Now showing
+            </span>
+          </div>
+        )}
+
+        {streaming.length > 0 && (
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
+            <span style={{ fontSize: "12px", color: "#888899", width: "75px", flexShrink: 0 }}>Streaming</span>
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+              {streaming.map(p => (
+                <img key={p.provider_id}
+                  src={`https://image.tmdb.org/t/p/w92${p.logo_path}`}
+                  alt={p.provider_name} title={p.provider_name}
+                  style={{ width: "34px", height: "34px", borderRadius: "8px", objectFit: "cover" }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {rent.length > 0 && (
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
+            <span style={{ fontSize: "12px", color: "#888899", width: "75px", flexShrink: 0 }}>Rent</span>
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+              {rent.map(p => (
+                <img key={p.provider_id}
+                  src={`https://image.tmdb.org/t/p/w92${p.logo_path}`}
+                  alt={p.provider_name} title={p.provider_name}
+                  style={{ width: "34px", height: "34px", borderRadius: "8px", objectFit: "cover" }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {buy.length > 0 && (
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <span style={{ fontSize: "12px", color: "#888899", width: "75px", flexShrink: 0 }}>Buy</span>
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+              {buy.map(p => (
+                <img key={p.provider_id}
+                  src={`https://image.tmdb.org/t/p/w92${p.logo_path}`}
+                  alt={p.provider_name} title={p.provider_name}
+                  style={{ width: "34px", height: "34px", borderRadius: "8px", objectFit: "cover" }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Cast */}
       {cast.length > 0 && (
         <div>
-          <h2 style={{ fontSize: "18px", marginBottom: "16px" }}>Cast</h2>
-          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+          <h2 style={{ fontSize: "16px", fontWeight: "500", marginBottom: "14px", color: "#fff" }}>Cast</h2>
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
             {cast.map(person => (
               <div key={person.id} style={{
                 background: "#1e1e2a", borderRadius: "8px",
-                overflow: "hidden", width: "90px", textAlign: "center"
+                overflow: "hidden", width: "80px", textAlign: "center"
               }}>
                 {person.profile_path
-                  ? <img
-                      src={IMG + person.profile_path}
-                      alt={person.name}
-                      style={{ width: "90px", height: "110px", objectFit: "cover", display: "block" }}
-                    />
+                  ? <img src={IMG + person.profile_path} alt={person.name}
+                      style={{ width: "80px", height: "100px", objectFit: "cover", display: "block" }} />
                   : <div style={{
-                      width: "90px", height: "110px", background: "#2a2a3a",
-                      display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px"
-                    }}>
-                      👤
-                    </div>
+                      width: "80px", height: "100px", background: "#2a2a3a",
+                      display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px"
+                    }}>👤</div>
                 }
                 <div style={{ padding: "6px 4px" }}>
-                  <div style={{ fontSize: "11px", fontWeight: "500", lineHeight: "1.2" }}>{person.name}</div>
-                  <div style={{ fontSize: "10px", color: "#888899", marginTop: "2px" }}>{person.character}</div>
+                  <div style={{ fontSize: "10px", fontWeight: "500", lineHeight: "1.2", color: "#e8e6f0" }}>{person.name}</div>
+                  <div style={{ fontSize: "9px", color: "#888899", marginTop: "2px", lineHeight: "1.2" }}>{person.character}</div>
                 </div>
               </div>
             ))}

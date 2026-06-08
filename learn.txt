@@ -1,3 +1,17 @@
+CineMovie is a full React single-page application that:
+
+Fetches real movie data from TMDB's public API
+Has 3 pages -- Home, Movie Detail, and Watchlist
+Lets you search any movie by name
+Filter movies by genre
+Click any movie to see full details -- poster, cast, runtime, budget, genres, tagline
+Add movies to a personal watchlist that persists across pages
+Fully client-side routed with React Router -- no page reloads
+
+"I built a movie discovery app in React that consumes the TMDB REST API. It uses React Router for navigation, Context API for global watchlist state, and a custom useFetch hook for reusable data fetching across components."
+
+
+
 1. in html : The <script> tag loads main.jsx which starts everything.
 
 2. useState returns two things in an array:
