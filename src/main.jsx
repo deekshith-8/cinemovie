@@ -1,6 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { HashRouter, Routes, Route } from 'react-router-dom'
 import './index.css'
 import { WatchlistProvider } from './context/WatchlistContext'
 import Navbar from './components/Navbar'
@@ -10,7 +10,7 @@ import WatchlistPage from './pages/WatchlistPage'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <BrowserRouter>
+    <HashRouter>
       <WatchlistProvider>
         <Navbar />
         <Routes>
@@ -19,6 +19,6 @@ createRoot(document.getElementById('root')).render(
           <Route path="/watchlist" element={<WatchlistPage />} />
         </Routes>
       </WatchlistProvider>
-    </BrowserRouter>
+    </HashRouter>
   </StrictMode>
 )
