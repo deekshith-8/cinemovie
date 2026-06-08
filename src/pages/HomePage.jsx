@@ -20,14 +20,13 @@ function HomePage() {
   const [query, setQuery] = useState("")
   const [searchTerm, setSearchTerm] = useState("")
   const [activeGenre, setActiveGenre] = useState(null)
-  const [page, setPage] = useState(1)
+  const [page, setPage] = useState(2)
   const [movies, setMovies] = useState([])
   const [loading, setLoading] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState(null)
   const [totalPages, setTotalPages] = useState(1)
 
-  // Build URL based on current state
   function buildUrl(pageNum) {
     if (searchTerm) {
       return `https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(searchTerm)}&page=${pageNum}`
@@ -38,18 +37,23 @@ function HomePage() {
     return `https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}&page=${pageNum}`
   }
 
-  // Fetch fresh results (page 1) whenever search or genre changes
   useEffect(() => {
     setLoading(true)
     setError(null)
-    setPage(1)
+    setPage(2)
     setMovies([])
 
-    fetch(buildUrl(1))
-      .then(r => { if (!r.ok) throw new Error('Failed'); return r.json() })
-      .then(data => {
-        setMovies(data.results || [])
-        setTotalPages(Math.min(data.total_pages, 20)) // TMDB caps at 500 pages, we limit to 20
+    Promise.all([
+      fetch(buildUrl(1)).then(r => r.json()),
+      fetch(buildUrl(2)).then(r => r.json())
+    ])
+      .then(([data1, data2]) => {
+        const combined = [
+          ...(data1.results || []),
+          ...(data2.results || [])
+        ].slice(0, 24)
+        setMovies(combined)
+        setTotalPages(Math.min(data1.total_pages, 20))
         setLoading(false)
       })
       .catch(err => {
@@ -58,7 +62,6 @@ function HomePage() {
       })
   }, [searchTerm, activeGenre])
 
-  // Load more -- append to existing movies
   function loadMore() {
     const nextPage = page + 1
     setLoadingMore(true)
@@ -162,7 +165,9 @@ function HomePage() {
       </div>
 
       {loading && (
-        <div style={{ color: "#888899", fontSize: "14px" }}>Loading...</div>
+        <div style={{ color: "#888899", fontSize: "14px", padding: "40px 0", textAlign: "center" }}>
+          Loading movies...
+        </div>
       )}
 
       {error && (
@@ -188,22 +193,52 @@ function HomePage() {
             ))}
           </div>
 
-          {/* Load More button */}
+          {/* Load More */}
           {movies.length > 0 && page < totalPages && (
-            <div style={{ textAlign: "center", marginTop: "32px" }}>
+            <div style={{ textAlign: "center", marginTop: "48px", marginBottom: "20px" }}>
+              <div style={{ color: "#888899", fontSize: "12px", marginBottom: "12px" }}>
+                Showing {movies.length} movies
+              </div>
               <button
                 onClick={loadMore}
                 disabled={loadingMore}
                 style={{
-                  background: loadingMore ? "#1e1e2a" : "#e63946",
-                  border: "none", color: "#fff",
-                  padding: "12px 32px", borderRadius: "8px",
+                  background: "transparent",
+                  border: "1px solid #e63946",
+                  color: loadingMore ? "#888899" : "#e63946",
+                  padding: "12px 40px",
+                  borderRadius: "30px",
                   cursor: loadingMore ? "not-allowed" : "pointer",
-                  fontSize: "14px", fontWeight: "500"
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  letterSpacing: "0.5px",
+                  transition: "all 0.2s"
+                }}
+                onMouseEnter={e => {
+                  if (!loadingMore) {
+                    e.target.style.background = "#e63946"
+                    e.target.style.color = "#fff"
+                  }
+                }}
+                onMouseLeave={e => {
+                  if (!loadingMore) {
+                    e.target.style.background = "transparent"
+                    e.target.style.color = "#e63946"
+                  }
                 }}
               >
-                {loadingMore ? "Loading..." : `Load More (Page ${page + 1} of ${totalPages})`}
+                {loadingMore ? "Loading..." : "Load More"}
               </button>
+              <div style={{ color: "#444", fontSize: "11px", marginTop: "10px" }}>
+                Page {page} of {totalPages}
+              </div>
+            </div>
+          )}
+
+          {/* End of results */}
+          {movies.length > 0 && page >= totalPages && (
+            <div style={{ textAlign: "center", marginTop: "40px", color: "#444", fontSize: "13px" }}>
+              You have reached the end
             </div>
           )}
         </>
