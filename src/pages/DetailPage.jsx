@@ -5,16 +5,37 @@ import { useWatchlist } from '../context/WatchlistContext'
 const API_KEY = 'b2368eef2bb9277076f02638705dccc1'
 const IMG = 'https://image.tmdb.org/t/p/w500'
 
+function OTTLogo({ provider, link, label }) {
+  return (
+    
+      href={link}
+      target="_blank"
+      rel="noreferrer"
+      title={label + " on " + provider.provider_name}
+      style={{ display: "inline-block" }}
+    >
+      <img
+        src={"https://image.tmdb.org/t/p/w92" + provider.logo_path}
+        alt={provider.provider_name}
+        style={{
+          width: "34px", height: "34px", borderRadius: "8px",
+          objectFit: "cover", cursor: "pointer"
+        }}
+      />
+    </a>
+  )
+}
+
 function DetailPage() {
 
   const { id } = useParams()
   const navigate = useNavigate()
   const { toggleWatchlist, inWatchlist } = useWatchlist()
 
-  const url = `https://api.themoviedb.org/3/movie/${id}?api_key=${API_KEY}&append_to_response=credits`
+  const url = "https://api.themoviedb.org/3/movie/" + id + "?api_key=" + API_KEY + "&append_to_response=credits"
   const { data: movie, loading, error } = useFetch(url)
   const { data: providers } = useFetch(
-    `https://api.themoviedb.org/3/movie/${id}/watch/providers?api_key=${API_KEY}`
+    "https://api.themoviedb.org/3/movie/" + id + "/watch/providers?api_key=" + API_KEY
   )
 
   if (loading) return (
@@ -27,11 +48,11 @@ function DetailPage() {
 
   const cast = movie.credits?.cast?.slice(0, 8) || []
   const runtime = movie.runtime
-    ? `${Math.floor(movie.runtime / 60)}h ${movie.runtime % 60}m`
+    ? Math.floor(movie.runtime / 60) + "h " + (movie.runtime % 60) + "m"
     : "N/A"
 
   const indiaProviders = providers?.results?.IN || null
-  const watchLink = providers?.results?.IN?.link || null
+  const watchLink = indiaProviders ? indiaProviders.link : "#"
   const streaming = indiaProviders?.flatrate || []
   const rent = indiaProviders?.rent || []
   const buy = indiaProviders?.buy || []
@@ -41,40 +62,9 @@ function DetailPage() {
 
   const noProviders = !inTheatres && streaming.length === 0 && rent.length === 0 && buy.length === 0
 
-  function OTTLogo({ provider, label }) {
-    return (
-      
-        href={watchLink || "#"}
-        target="_blank"
-        rel="noreferrer"
-        title={`${label} on ${provider.provider_name}`}
-        style={{ display: "inline-block" }}
-      >
-        <img
-          src={`https://image.tmdb.org/t/p/w92${provider.logo_path}`}
-          alt={provider.provider_name}
-          style={{
-            width: "34px", height: "34px", borderRadius: "8px",
-            objectFit: "cover", cursor: "pointer",
-            transition: "transform 0.15s, opacity 0.15s"
-          }}
-          onMouseEnter={e => {
-            e.target.style.transform = "scale(1.15)"
-            e.target.style.opacity = "0.85"
-          }}
-          onMouseLeave={e => {
-            e.target.style.transform = "scale(1)"
-            e.target.style.opacity = "1"
-          }}
-        />
-      </a>
-    )
-  }
-
   return (
     <div style={{ padding: "30px", maxWidth: "960px", margin: "0 auto" }}>
 
-      {/* Back */}
       <button
         onClick={() => navigate(-1)}
         style={{
@@ -83,10 +73,9 @@ function DetailPage() {
           cursor: "pointer", marginBottom: "24px", fontSize: "13px"
         }}
       >
-        ← Back
+        Back
       </button>
 
-      {/* Hero */}
       <div style={{ display: "flex", gap: "28px", marginBottom: "28px" }}>
         {movie.poster_path
           ? <img src={IMG + movie.poster_path} alt={movie.title}
@@ -105,22 +94,31 @@ function DetailPage() {
             </p>
           )}
 
-          {/* Stats */}
           <div style={{ display: "flex", gap: "20px", marginBottom: "14px", flexWrap: "wrap" }}>
-            {[
-              { label: "RATING", value: `★ ${movie.vote_average?.toFixed(1)}`, gold: true },
-              { label: "RUNTIME", value: runtime },
-              { label: "YEAR", value: movie.release_date?.slice(0, 4) },
-              ...(movie.budget > 0 ? [{ label: "BUDGET", value: `$${(movie.budget / 1e6).toFixed(0)}M` }] : [])
-            ].map(s => (
-              <div key={s.label}>
-                <div style={{ fontSize: "10px", color: "#888899", marginBottom: "2px", letterSpacing: ".05em" }}>{s.label}</div>
-                <div style={{ fontSize: "13px", fontWeight: "500", color: s.gold ? "#ffd166" : "#fff" }}>{s.value}</div>
+            <div>
+              <div style={{ fontSize: "10px", color: "#888899", marginBottom: "2px" }}>RATING</div>
+              <div style={{ fontSize: "13px", fontWeight: "500", color: "#ffd166" }}>
+                {"\u2605"} {movie.vote_average?.toFixed(1)}
               </div>
-            ))}
+            </div>
+            <div>
+              <div style={{ fontSize: "10px", color: "#888899", marginBottom: "2px" }}>RUNTIME</div>
+              <div style={{ fontSize: "13px", fontWeight: "500", color: "#fff" }}>{runtime}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: "10px", color: "#888899", marginBottom: "2px" }}>YEAR</div>
+              <div style={{ fontSize: "13px", fontWeight: "500", color: "#fff" }}>{movie.release_date?.slice(0, 4)}</div>
+            </div>
+            {movie.budget > 0 && (
+              <div>
+                <div style={{ fontSize: "10px", color: "#888899", marginBottom: "2px" }}>BUDGET</div>
+                <div style={{ fontSize: "13px", fontWeight: "500", color: "#fff" }}>
+                  ${(movie.budget / 1e6).toFixed(0)}M
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Genres */}
           <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "14px" }}>
             {movie.genres?.map(g => (
               <span key={g.id} style={{
@@ -132,12 +130,10 @@ function DetailPage() {
             ))}
           </div>
 
-          {/* Overview */}
           <p style={{ fontSize: "13px", color: "#b0afc0", lineHeight: "1.7", marginBottom: "16px" }}>
             {movie.overview}
           </p>
 
-          {/* Watchlist button */}
           <button
             onClick={() => toggleWatchlist({
               id: movie.id, title: movie.title,
@@ -153,7 +149,7 @@ function DetailPage() {
               fontSize: "13px", fontWeight: "500", cursor: "pointer"
             }}
           >
-            {inWatchlist(movie.id) ? "✓ In Watchlist" : "+ Add to Watchlist"}
+            {inWatchlist(movie.id) ? "\u2713 In Watchlist" : "+ Add to Watchlist"}
           </button>
         </div>
       </div>
@@ -169,7 +165,7 @@ function DetailPage() {
             fontSize: "11px", color: "#888899", background: "#1e1e2a",
             padding: "2px 8px", borderRadius: "20px", border: "0.5px solid #2a2a3a"
           }}>
-            🇮🇳 India
+            India
           </span>
         </div>
 
@@ -186,7 +182,7 @@ function DetailPage() {
               border: "1px solid #e63946", color: "#e63946",
               fontSize: "11px", padding: "3px 12px", borderRadius: "20px"
             }}>
-              🎬 Now showing
+              Now showing
             </span>
           </div>
         )}
@@ -195,7 +191,9 @@ function DetailPage() {
           <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
             <span style={{ fontSize: "12px", color: "#888899", width: "75px", flexShrink: 0 }}>Streaming</span>
             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-              {streaming.map(p => <OTTLogo key={p.provider_id} provider={p} label="Stream" />)}
+              {streaming.map(p => (
+                <OTTLogo key={p.provider_id} provider={p} link={watchLink} label="Stream" />
+              ))}
             </div>
           </div>
         )}
@@ -204,7 +202,9 @@ function DetailPage() {
           <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
             <span style={{ fontSize: "12px", color: "#888899", width: "75px", flexShrink: 0 }}>Rent</span>
             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-              {rent.map(p => <OTTLogo key={p.provider_id} provider={p} label="Rent" />)}
+              {rent.map(p => (
+                <OTTLogo key={p.provider_id} provider={p} link={watchLink} label="Rent" />
+              ))}
             </div>
           </div>
         )}
@@ -213,7 +213,9 @@ function DetailPage() {
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <span style={{ fontSize: "12px", color: "#888899", width: "75px", flexShrink: 0 }}>Buy</span>
             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-              {buy.map(p => <OTTLogo key={p.provider_id} provider={p} label="Buy" />)}
+              {buy.map(p => (
+                <OTTLogo key={p.provider_id} provider={p} link={watchLink} label="Buy" />
+              ))}
             </div>
           </div>
         )}
@@ -235,11 +237,17 @@ function DetailPage() {
                   : <div style={{
                       width: "80px", height: "100px", background: "#2a2a3a",
                       display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px"
-                    }}>👤</div>
+                    }}>
+                      {"\uD83D\uDC64"}
+                    </div>
                 }
                 <div style={{ padding: "6px 4px" }}>
-                  <div style={{ fontSize: "10px", fontWeight: "500", lineHeight: "1.2", color: "#e8e6f0" }}>{person.name}</div>
-                  <div style={{ fontSize: "9px", color: "#888899", marginTop: "2px", lineHeight: "1.2" }}>{person.character}</div>
+                  <div style={{ fontSize: "10px", fontWeight: "500", lineHeight: "1.2", color: "#e8e6f0" }}>
+                    {person.name}
+                  </div>
+                  <div style={{ fontSize: "9px", color: "#888899", marginTop: "2px", lineHeight: "1.2" }}>
+                    {person.character}
+                  </div>
                 </div>
               </div>
             ))}
