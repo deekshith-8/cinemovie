@@ -7,7 +7,7 @@ const IMG = 'https://image.tmdb.org/t/p/w500'
 
 function OTTLogo({ provider, link, label }) {
   return (
-    
+    <a
       href={link}
       target="_blank"
       rel="noreferrer"
@@ -17,10 +17,7 @@ function OTTLogo({ provider, link, label }) {
       <img
         src={"https://image.tmdb.org/t/p/w92" + provider.logo_path}
         alt={provider.provider_name}
-        style={{
-          width: "34px", height: "34px", borderRadius: "8px",
-          objectFit: "cover", cursor: "pointer"
-        }}
+        style={{ width: "34px", height: "34px", borderRadius: "8px", objectFit: "cover", cursor: "pointer" }}
       />
     </a>
   )
@@ -32,18 +29,18 @@ function DetailPage() {
   const navigate = useNavigate()
   const { toggleWatchlist, inWatchlist } = useWatchlist()
 
-  const url = "https://api.themoviedb.org/3/movie/" + id + "?api_key=" + API_KEY + "&append_to_response=credits"
-  const { data: movie, loading, error } = useFetch(url)
+  const { data: movie, loading, error } = useFetch(
+    "https://api.themoviedb.org/3/movie/" + id + "?api_key=" + API_KEY + "&append_to_response=credits"
+  )
+  const { data: videos } = useFetch(
+    "https://api.themoviedb.org/3/movie/" + id + "/videos?api_key=" + API_KEY
+  )
   const { data: providers } = useFetch(
     "https://api.themoviedb.org/3/movie/" + id + "/watch/providers?api_key=" + API_KEY
   )
 
-  if (loading) return (
-    <div style={{ padding: "40px", color: "#888" }}>Loading...</div>
-  )
-  if (error) return (
-    <div style={{ padding: "40px", color: "#e63946" }}>Error: {error}</div>
-  )
+  if (loading) return <div style={{ padding: "40px", color: "#888" }}>Loading...</div>
+  if (error) return <div style={{ padding: "40px", color: "#e63946" }}>Error: {error}</div>
   if (!movie) return null
 
   const cast = movie.credits?.cast?.slice(0, 8) || []
@@ -59,8 +56,8 @@ function DetailPage() {
   const inTheatres = movie.release_date
     ? new Date(movie.release_date) > new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
     : false
-
   const noProviders = !inTheatres && streaming.length === 0 && rent.length === 0 && buy.length === 0
+  const trailer = videos?.results?.find(function(v) { return v.type === "Trailer" && v.site === "YouTube" })
 
   return (
     <div style={{ padding: "30px", maxWidth: "960px", margin: "0 auto" }}>
@@ -76,6 +73,7 @@ function DetailPage() {
         Back
       </button>
 
+      {/* Hero */}
       <div style={{ display: "flex", gap: "28px", marginBottom: "28px" }}>
         {movie.poster_path
           ? <img src={IMG + movie.poster_path} alt={movie.title}
@@ -113,7 +111,7 @@ function DetailPage() {
               <div>
                 <div style={{ fontSize: "10px", color: "#888899", marginBottom: "2px" }}>BUDGET</div>
                 <div style={{ fontSize: "13px", fontWeight: "500", color: "#fff" }}>
-                  ${(movie.budget / 1e6).toFixed(0)}M
+                  {"$" + (movie.budget / 1e6).toFixed(0) + "M"}
                 </div>
               </div>
             )}
@@ -221,6 +219,30 @@ function DetailPage() {
         )}
       </div>
 
+      {/* Trailer */}
+      {trailer && (
+        <div style={{ marginBottom: "24px" }}>
+          <h2 style={{ fontSize: "16px", fontWeight: "500", marginBottom: "14px", color: "#fff" }}>
+            Trailer
+          </h2>
+          <div style={{
+            position: "relative", paddingBottom: "56.25%",
+            height: 0, borderRadius: "10px", overflow: "hidden",
+            border: "0.5px solid #2a2a3a"
+          }}>
+            <iframe
+              src={"https://www.youtube.com/embed/" + trailer.key}
+              title={trailer.name}
+              allowFullScreen
+              style={{
+                position: "absolute", top: 0, left: 0,
+                width: "100%", height: "100%", border: "none"
+              }}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Cast */}
       {cast.length > 0 && (
         <div>
@@ -260,3 +282,4 @@ function DetailPage() {
 }
 
 export default DetailPage
+
