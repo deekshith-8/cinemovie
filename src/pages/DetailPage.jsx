@@ -31,6 +31,7 @@ function DetailPage() {
     : "N/A"
 
   const indiaProviders = providers?.results?.IN || null
+  const watchLink = providers?.results?.IN?.link || null
   const streaming = indiaProviders?.flatrate || []
   const rent = indiaProviders?.rent || []
   const buy = indiaProviders?.buy || []
@@ -39,6 +40,36 @@ function DetailPage() {
     : false
 
   const noProviders = !inTheatres && streaming.length === 0 && rent.length === 0 && buy.length === 0
+
+  function OTTLogo({ provider, label }) {
+    return (
+      
+        href={watchLink || "#"}
+        target="_blank"
+        rel="noreferrer"
+        title={`${label} on ${provider.provider_name}`}
+        style={{ display: "inline-block" }}
+      >
+        <img
+          src={`https://image.tmdb.org/t/p/w92${provider.logo_path}`}
+          alt={provider.provider_name}
+          style={{
+            width: "34px", height: "34px", borderRadius: "8px",
+            objectFit: "cover", cursor: "pointer",
+            transition: "transform 0.15s, opacity 0.15s"
+          }}
+          onMouseEnter={e => {
+            e.target.style.transform = "scale(1.15)"
+            e.target.style.opacity = "0.85"
+          }}
+          onMouseLeave={e => {
+            e.target.style.transform = "scale(1)"
+            e.target.style.opacity = "1"
+          }}
+        />
+      </a>
+    )
+  }
 
   return (
     <div style={{ padding: "30px", maxWidth: "960px", margin: "0 auto" }}>
@@ -164,13 +195,7 @@ function DetailPage() {
           <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
             <span style={{ fontSize: "12px", color: "#888899", width: "75px", flexShrink: 0 }}>Streaming</span>
             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-              {streaming.map(p => (
-                <img key={p.provider_id}
-                  src={`https://image.tmdb.org/t/p/w92${p.logo_path}`}
-                  alt={p.provider_name} title={p.provider_name}
-                  style={{ width: "34px", height: "34px", borderRadius: "8px", objectFit: "cover" }}
-                />
-              ))}
+              {streaming.map(p => <OTTLogo key={p.provider_id} provider={p} label="Stream" />)}
             </div>
           </div>
         )}
@@ -179,13 +204,7 @@ function DetailPage() {
           <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
             <span style={{ fontSize: "12px", color: "#888899", width: "75px", flexShrink: 0 }}>Rent</span>
             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-              {rent.map(p => (
-                <img key={p.provider_id}
-                  src={`https://image.tmdb.org/t/p/w92${p.logo_path}`}
-                  alt={p.provider_name} title={p.provider_name}
-                  style={{ width: "34px", height: "34px", borderRadius: "8px", objectFit: "cover" }}
-                />
-              ))}
+              {rent.map(p => <OTTLogo key={p.provider_id} provider={p} label="Rent" />)}
             </div>
           </div>
         )}
@@ -194,13 +213,7 @@ function DetailPage() {
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <span style={{ fontSize: "12px", color: "#888899", width: "75px", flexShrink: 0 }}>Buy</span>
             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-              {buy.map(p => (
-                <img key={p.provider_id}
-                  src={`https://image.tmdb.org/t/p/w92${p.logo_path}`}
-                  alt={p.provider_name} title={p.provider_name}
-                  style={{ width: "34px", height: "34px", borderRadius: "8px", objectFit: "cover" }}
-                />
-              ))}
+              {buy.map(p => <OTTLogo key={p.provider_id} provider={p} label="Buy" />)}
             </div>
           </div>
         )}
