@@ -37,30 +37,32 @@ function HomePage() {
     return `https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}&page=${pageNum}`
   }
 
-  useEffect(() => {
-    setLoading(true)
-    setError(null)
-    setPage(2)
-    setMovies([])
+useEffect(() => {
+  setLoading(true)
+  setError(null)
+  setPage(2)
+  setMovies([])
 
-    Promise.all([
-      fetch(buildUrl(1)).then(r => r.json()),
-      fetch(buildUrl(2)).then(r => r.json())
-    ])
-      .then(([data1, data2]) => {
-        const combined = [
-          ...(data1.results || []),
-          ...(data2.results || [])
-        ].slice(0, 27)
-        setMovies(combined)
-        setTotalPages(Math.min(data1.total_pages, 20))
-        setLoading(false)
-      })
-      .catch(err => {
-        setError(err.message)
-        setLoading(false)
-      })
-  }, [searchTerm, activeGenre])
+  Promise.all([
+    fetch(buildUrl(1)).then(r => r.json()),
+    fetch(buildUrl(2)).then(r => r.json())
+  ])
+    .then(([data1, data2]) => {
+      const combined = [
+        ...(data1.results || []),
+        ...(data2.results || [])
+      ]
+      .filter(m => m.poster_path)
+      .slice(0, 27)
+      setMovies(combined)
+      setTotalPages(Math.min(data1.total_pages, 20))
+      setLoading(false)
+    })
+    .catch(err => {
+      setError(err.message)
+      setLoading(false)
+    })
+}, [searchTerm, activeGenre])
 
   function loadMore() {
     const nextPage = page + 1
