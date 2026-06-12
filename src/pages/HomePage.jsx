@@ -51,7 +51,7 @@ function HomePage() {
         const combined = [
           ...(data1.results || []),
           ...(data2.results || [])
-        ].slice(0, 24)
+        ].slice(0, 27)
         setMovies(combined)
         setTotalPages(Math.min(data1.total_pages, 20))
         setLoading(false)
