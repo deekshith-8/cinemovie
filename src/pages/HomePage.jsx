@@ -176,7 +176,7 @@ function HomePage() {
 
       {!loading && !error && (
         <>
-          <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(155px, 1fr))", gap: "16px" }}>
             {movies.map(movie => (
               <MovieCard
                 key={movie.id}
