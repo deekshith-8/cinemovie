@@ -7,7 +7,7 @@ const IMG = 'https://image.tmdb.org/t/p/w500'
 
 function OTTLogo({ provider, link, label }) {
   return (
-    <a
+    
       href={link}
       target="_blank"
       rel="noreferrer"
@@ -38,6 +38,9 @@ function DetailPage() {
   const { data: providers } = useFetch(
     "https://api.themoviedb.org/3/movie/" + id + "/watch/providers?api_key=" + API_KEY
   )
+  const { data: similar } = useFetch(
+    "https://api.themoviedb.org/3/movie/" + id + "/similar?api_key=" + API_KEY
+  )
 
   if (loading) return <div style={{ padding: "40px", color: "#888" }}>Loading...</div>
   if (error) return <div style={{ padding: "40px", color: "#e63946" }}>Error: {error}</div>
@@ -58,6 +61,7 @@ function DetailPage() {
     : false
   const noProviders = !inTheatres && streaming.length === 0 && rent.length === 0 && buy.length === 0
   const trailer = videos?.results?.find(function(v) { return v.type === "Trailer" && v.site === "YouTube" })
+  const similarMovies = similar?.results?.filter(function(m) { return m.poster_path }).slice(0, 9) || []
 
   return (
     <div style={{ padding: "30px", maxWidth: "960px", margin: "0 auto" }}>
@@ -245,7 +249,7 @@ function DetailPage() {
 
       {/* Cast */}
       {cast.length > 0 && (
-        <div>
+        <div style={{ marginBottom: "32px" }}>
           <h2 style={{ fontSize: "16px", fontWeight: "500", marginBottom: "14px", color: "#fff" }}>Cast</h2>
           <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
             {cast.map(person => (
@@ -277,9 +281,52 @@ function DetailPage() {
         </div>
       )}
 
+      {/* Similar Movies */}
+      {similarMovies.length > 0 && (
+        <div style={{ marginBottom: "32px" }}>
+          <h2 style={{ fontSize: "16px", fontWeight: "500", marginBottom: "14px", color: "#fff" }}>
+            Similar Movies
+          </h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: "12px" }}>
+            {similarMovies.map(function(m) {
+              return (
+                <div
+                  key={m.id}
+                  onClick={function() { navigate("/movie/" + m.id) }}
+                  style={{
+                    background: "#1e1e2a", borderRadius: "8px",
+                    overflow: "hidden", cursor: "pointer",
+                    transition: "transform 0.2s"
+                  }}
+                  onMouseEnter={function(e) { e.currentTarget.style.transform = "translateY(-4px)" }}
+                  onMouseLeave={function(e) { e.currentTarget.style.transform = "translateY(0)" }}
+                >
+                  <img
+                    src={"https://image.tmdb.org/t/p/w500" + m.poster_path}
+                    alt={m.title}
+                    style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", display: "block" }}
+                  />
+                  <div style={{ padding: "8px 6px" }}>
+                    <div style={{
+                      fontSize: "11px", fontWeight: "500", color: "#e8e6f0",
+                      lineHeight: "1.3", display: "-webkit-box",
+                      WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden"
+                    }}>
+                      {m.title}
+                    </div>
+                    <div style={{ fontSize: "10px", color: "#ffd166", marginTop: "3px" }}>
+                      {"\u2605"} {m.vote_average?.toFixed(1)}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }
 
 export default DetailPage
-
