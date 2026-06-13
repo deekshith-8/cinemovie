@@ -1,35 +1,37 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useState, useEffect } from 'react'
 
-// Step 1: create the context object
-// This is like creating an empty box that will hold our data
 const WatchlistContext = createContext(null)
 
-// Step 2: create the Provider component
-// This wraps the app and makes watchlist data available everywhere
 function WatchlistProvider({ children }) {
 
-  const [watchlist, setWatchlist] = useState([])
+  const [watchlist, setWatchlist] = useState(function() {
+    try {
+      const saved = localStorage.getItem('cinemovie-watchlist')
+      return saved ? JSON.parse(saved) : []
+    } catch(e) {
+      return []
+    }
+  })
 
-  // Add or remove a movie from watchlist
+  useEffect(function() {
+    localStorage.setItem('cinemovie-watchlist', JSON.stringify(watchlist))
+  }, [watchlist])
+
   function toggleWatchlist(movie) {
-    setWatchlist(prev => {
-      const exists = prev.find(m => m.id === movie.id)
+    setWatchlist(function(prev) {
+      const exists = prev.find(function(m) { return m.id === movie.id })
       if (exists) {
-        // already in watchlist -- remove it
-        return prev.filter(m => m.id !== movie.id)
+        return prev.filter(function(m) { return m.id !== movie.id })
       } else {
-        // not in watchlist -- add it
         return [...prev, movie]
       }
     })
   }
 
-  // Check if a movie is already in the watchlist
   function inWatchlist(id) {
-    return watchlist.some(m => m.id === id)
+    return watchlist.some(function(m) { return m.id === id })
   }
 
-  // Everything inside `value` is accessible to any component
   return (
     <WatchlistContext.Provider value={{ watchlist, toggleWatchlist, inWatchlist }}>
       {children}
@@ -37,9 +39,6 @@ function WatchlistProvider({ children }) {
   )
 }
 
-// Step 3: custom hook so components don't import context directly
-// Instead of: const { watchlist } = useContext(WatchlistContext)
-// They just do: const { watchlist } = useWatchlist()
 function useWatchlist() {
   return useContext(WatchlistContext)
 }
