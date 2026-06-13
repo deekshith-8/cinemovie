@@ -29,3 +29,6 @@ JWT based auth. You'll have two login options:
 
 Email/Password — store hashed password in MongoDB via bcrypt, return a JWT on login
 Google OAuth — use passport-google-oauth20, exchange Google token for your own JWT
+
+5. Watchlist refresh - useState  = RAM memory = gone on refresh
+localStorage = browser storage = survives refresh, survives closing tab
