@@ -1,6 +1,6 @@
-import { StrictMode } from 'react'
+import { StrictMode, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
-import { HashRouter, Routes, Route } from 'react-router-dom'
+import { HashRouter, Routes, Route, useLocation } from 'react-router-dom'
 import './index.css'
 import { WatchlistProvider } from './context/WatchlistContext'
 import Navbar from './components/Navbar'
@@ -8,10 +8,19 @@ import HomePage from './pages/HomePage'
 import DetailPage from './pages/DetailPage'
 import WatchlistPage from './pages/WatchlistPage'
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useEffect(function() {
+    window.scrollTo(0, 0)
+  }, [pathname])
+  return null
+}
+
+function App() {
+  return (
     <HashRouter>
       <WatchlistProvider>
+        <ScrollToTop />
         <Navbar />
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -20,5 +29,11 @@ createRoot(document.getElementById('root')).render(
         </Routes>
       </WatchlistProvider>
     </HashRouter>
+  )
+}
+
+createRoot(document.getElementById('root')).render(
+  <StrictMode>
+    <App />
   </StrictMode>
 )
