@@ -1,6 +1,4 @@
-const fs = require('fs')
-
-const theme = `import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useState } from 'react'
 
 const ThemeContext = createContext(null)
 
@@ -17,7 +15,3 @@ function ThemeProvider({ children }) {
 function useTheme() { return useContext(ThemeContext) }
 
 export { ThemeProvider, useTheme }
-`
-
-fs.writeFileSync('src/context/ThemeContext.jsx', theme)
-console.log('Done!')
