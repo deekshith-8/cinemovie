@@ -9,7 +9,6 @@ function Navbar() {
   const bg = dark ? "#111118" : "#ffffff"
   const border = dark ? "#2a2a3a" : "#e0e0ea"
   const linkColor = dark ? "#888899" : "#555566"
-  const logoColor = "#e63946"
 
   return (
     <nav style={{
@@ -18,7 +17,7 @@ function Navbar() {
       borderBottom: "0.5px solid " + border,
       position: "sticky", top: 0, zIndex: 100
     }}>
-      <Link to="/" style={{ color: logoColor, fontSize: "22px", fontWeight: "700", textDecoration: "none", letterSpacing: "1px" }}>
+      <Link to="/" style={{ color: "#e63946", fontSize: "22px", fontWeight: "700", textDecoration: "none", letterSpacing: "1px" }}>
         CineMovie
       </Link>
 
@@ -35,10 +34,8 @@ function Navbar() {
           )}
         </Link>
 
-        {/* Theme toggle */}
         <button
           onClick={toggleTheme}
-          title={dark ? "Switch to light mode" : "Switch to dark mode"}
           style={{
             background: dark ? "#1e1e2a" : "#e8e8f0",
             border: "0.5px solid " + border,
@@ -46,10 +43,11 @@ function Navbar() {
             width: "36px", height: "36px",
             borderRadius: "50%", cursor: "pointer",
             fontSize: "16px", display: "flex",
-            alignItems: "center", justifyContent: "center"
+            alignItems: "center", justifyContent: "center",
+            fontWeight: "500"
           }}
         >
-          {dark ? "\uD83C\uDF19" : "\u2600\uFE0F"}
+          {dark ? "D" : "L"}
         </button>
       </div>
     </nav>
