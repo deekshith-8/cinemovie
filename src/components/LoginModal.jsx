@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
 function LoginModal({ dark, onClose }) {
-  const [mode, setMode] = useState("login")
+  const [mode, setMode] = useState("login") // "login" or "signup"
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [name, setName] = useState("")
@@ -14,11 +14,13 @@ function LoginModal({ dark, onClose }) {
 
   function handleSubmit(e) {
     e.preventDefault()
+    // TODO: wire up to your JWT / Google OAuth backend here
     console.log(mode, { name, email, password })
     onClose()
   }
 
   function handleGoogleLogin() {
+    // TODO: wire up to your Google OAuth flow here
     console.log("Google login clicked")
   }
 
