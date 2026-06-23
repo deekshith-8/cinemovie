@@ -16,7 +16,6 @@ const GENRES = [
 ]
 
 function HomePage() {
-
   const [query, setQuery] = useState("")
   const [searchTerm, setSearchTerm] = useState("")
   const [activeGenre, setActiveGenre] = useState(null)
@@ -128,9 +127,10 @@ function HomePage() {
     : "Popular Right Now"
 
   return (
-    <div style={{ padding: "30px" }}>
+    <div style={{ padding: "24px 30px" }}>
 
-      <div ref={searchRef} style={{ position: "relative", marginBottom: "16px" }}>
+      {/* Search */}
+      <div ref={searchRef} style={{ position: "relative", marginBottom: "12px" }}>
         <div style={{ display: "flex", gap: "8px" }}>
           <input
             type="text"
@@ -139,11 +139,35 @@ function HomePage() {
             onChange={function(e) { setQuery(e.target.value) }}
             onKeyDown={handleKeyDown}
             onFocus={function() { if (suggestions.length > 0) setShowSuggestions(true) }}
-            style={{ flex: 1, background: "#1e1e2a", border: "1px solid #2a2a3a", color: "#e8e6f0", padding: "10px 16px", borderRadius: "8px", fontSize: "14px", outline: "none" }}
+            style={{
+              flex: 1, height: "38px",
+              background: "#1e1e2a", border: "1px solid #2a2a3a",
+              color: "#e8e6f0", padding: "0 16px",
+              borderRadius: "8px", fontSize: "14px", outline: "none"
+            }}
           />
-          <button onClick={handleSearch} style={{ background: "#e63946", border: "none", color: "#fff", padding: "10px 20px", borderRadius: "8px", cursor: "pointer", fontSize: "14px" }}>Search</button>
+          <button
+            onClick={handleSearch}
+            style={{
+              height: "38px", background: "#e63946", border: "none",
+              color: "#fff", padding: "0 20px",
+              borderRadius: "8px", cursor: "pointer", fontSize: "14px"
+            }}
+          >
+            Search
+          </button>
           {(searchTerm || activeGenre) && (
-            <button onClick={handleClear} style={{ background: "transparent", border: "1px solid #2a2a3a", color: "#888899", padding: "10px 16px", borderRadius: "8px", cursor: "pointer", fontSize: "14px" }}>Clear</button>
+            <button
+              onClick={handleClear}
+              style={{
+                height: "38px", background: "transparent",
+                border: "1px solid #2a2a3a", color: "#888899",
+                padding: "0 16px", borderRadius: "8px",
+                cursor: "pointer", fontSize: "14px"
+              }}
+            >
+              Clear
+            </button>
           )}
         </div>
 
@@ -161,7 +185,7 @@ function HomePage() {
                   <img src={"https://image.tmdb.org/t/p/w92" + movie.poster_path} alt={movie.title} style={{ width: "32px", height: "48px", objectFit: "cover", borderRadius: "4px", flexShrink: 0 }} />
                   <div>
                     <div style={{ fontSize: "13px", color: "#e8e6f0", fontWeight: "500" }}>{movie.title}</div>
-                    <div style={{ fontSize: "11px", color: "#888899", marginTop: "2px" }}>{movie.release_date?.slice(0, 4)} &nbsp; {"★"} {movie.vote_average?.toFixed(1)}</div>
+                    <div style={{ fontSize: "11px", color: "#888899", marginTop: "2px" }}>{movie.release_date?.slice(0, 4)} &nbsp; ★ {movie.vote_average?.toFixed(1)}</div>
                   </div>
                 </div>
               )
@@ -170,19 +194,32 @@ function HomePage() {
         )}
       </div>
 
+      {/* Genre pills */}
       <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "24px" }}>
         {GENRES.map(function(genre) {
           return (
-            <button key={genre.id} onClick={function() { handleGenre(genre.id) }} style={{ background: activeGenre === genre.id ? "#e63946" : "#1e1e2a", border: activeGenre === genre.id ? "1px solid #e63946" : "1px solid #2a2a3a", color: activeGenre === genre.id ? "#fff" : "#888899", padding: "5px 14px", borderRadius: "20px", cursor: "pointer", fontSize: "12px" }}>
+            <button
+              key={genre.id}
+              onClick={function() { handleGenre(genre.id) }}
+              style={{
+                background: activeGenre === genre.id ? "#e63946" : "transparent",
+                border: activeGenre === genre.id ? "1px solid #e63946" : "1px solid #2a2a3a",
+                color: activeGenre === genre.id ? "#fff" : "#888899",
+                padding: "5px 14px", borderRadius: "20px",
+                cursor: "pointer", fontSize: "12px",
+                transition: "all 0.15s"
+              }}
+            >
               {genre.name}
             </button>
           )
         })}
       </div>
 
+      {/* Section header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-        <h2 style={{ fontSize: "18px", fontWeight: "500", color: "#fff" }}>{sectionLabel}</h2>
-        {movies.length > 0 && <span style={{ fontSize: "13px", color: "#888899" }}>{movies.length} movies loaded</span>}
+        <h2 style={{ fontSize: "16px", fontWeight: "500", color: "#fff" }}>{sectionLabel}</h2>
+        {movies.length > 0 && <span style={{ fontSize: "12px", color: "#888899" }}>{movies.length} movies loaded</span>}
       </div>
 
       {loading && <div style={{ color: "#888899", fontSize: "14px", padding: "40px 0", textAlign: "center" }}>Loading movies...</div>}
