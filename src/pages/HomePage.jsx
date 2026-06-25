@@ -28,6 +28,7 @@ function HomePage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [activeGenre, setActiveGenre] = useState(null)
   const [activeCategory, setActiveCategory] = useState("popular")
+  const [sortBy, setSortBy] = useState("default")
   const [page, setPage] = useState(2)
   const [movies, setMovies] = useState([])
   const [loading, setLoading] = useState(false)
@@ -138,6 +139,11 @@ function HomePage() {
     setShowSuggestions(false)
   }
 
+  var sortedMovies = movies.slice()
+  if (sortBy === "rating") sortedMovies.sort(function(a, b) { return b.vote_average - a.vote_average })
+  if (sortBy === "year") sortedMovies.sort(function(a, b) { return (b.release_date || "").localeCompare(a.release_date || "") })
+  if (sortBy === "popularity") sortedMovies.sort(function(a, b) { return b.popularity - a.popularity })
+
   var sectionLabel = searchTerm
     ? "Results for \"" + searchTerm + "\""
     : activeGenre
@@ -187,7 +193,6 @@ function HomePage() {
         )}
       </div>
 
-      {/* Category tabs */}
       <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
         {CATEGORIES.map(function(cat) {
           var active = activeCategory === cat.id && !activeGenre && !searchTerm
@@ -196,14 +201,11 @@ function HomePage() {
               key={cat.id}
               onClick={function() { handleCategory(cat.id) }}
               style={{
-                background: "transparent",
-                border: "none",
+                background: "transparent", border: "none",
                 borderBottom: active ? "2px solid #e63946" : "2px solid transparent",
                 color: active ? "#fff" : "#888899",
-                padding: "8px 4px",
-                cursor: "pointer",
-                fontSize: "14px",
-                fontWeight: active ? "500" : "400"
+                padding: "8px 4px", cursor: "pointer",
+                fontSize: "14px", fontWeight: active ? "500" : "400"
               }}
             >
               {cat.name}
@@ -212,7 +214,6 @@ function HomePage() {
         })}
       </div>
 
-      {/* Genre filters */}
       <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "24px" }}>
         {GENRES.map(function(genre) {
           return (
@@ -229,9 +230,21 @@ function HomePage() {
         })}
       </div>
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "12px" }}>
         <h2 style={{ fontSize: "18px", fontWeight: "500", color: "#fff" }}>{sectionLabel}</h2>
-        {movies.length > 0 && <span style={{ fontSize: "13px", color: "#888899" }}>{movies.length} movies loaded</span>}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          {movies.length > 0 && <span style={{ fontSize: "13px", color: "#888899" }}>{movies.length} movies loaded</span>}
+          <select
+            value={sortBy}
+            onChange={function(e) { setSortBy(e.target.value) }}
+            style={{ background: "#1e1e2a", border: "1px solid #2a2a3a", color: "#e8e6f0", padding: "6px 12px", borderRadius: "8px", fontSize: "13px", cursor: "pointer" }}
+          >
+            <option value="default">Default</option>
+            <option value="rating">Rating: High to Low</option>
+            <option value="year">Year: Newest First</option>
+            <option value="popularity">Most Popular</option>
+          </select>
+        </div>
       </div>
 
       {loading && <div style={{ color: "#888899", fontSize: "14px", padding: "40px 0", textAlign: "center" }}>Loading movies...</div>}
@@ -240,7 +253,7 @@ function HomePage() {
       {!loading && !error && (
         <div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(9, 1fr)", gap: "16px" }}>
-            {movies.map(function(movie) {
+            {sortedMovies.map(function(movie) {
               return (
                 <MovieCard
                   key={movie.id}
