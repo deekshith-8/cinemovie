@@ -23,7 +23,6 @@ const GENRES = [
 ]
 
 function HomePage() {
-
   const [query, setQuery] = useState("")
   const [searchTerm, setSearchTerm] = useState("")
   const [activeGenre, setActiveGenre] = useState(null)
@@ -145,14 +144,18 @@ function HomePage() {
   if (sortBy === "popularity") sortedMovies.sort(function(a, b) { return b.popularity - a.popularity })
 
   var sectionLabel = searchTerm
-    ? "Results for \"" + searchTerm + "\""
+    ? 'Results for "' + searchTerm + '"'
     : activeGenre
     ? (GENRES.find(function(g) { return g.id === activeGenre }) || {}).name
     : (CATEGORIES.find(function(c) { return c.id === activeCategory }) || {}).name
 
+  // skeleton cards for loading state
+  var skeletons = Array.from({ length: 18 })
+
   return (
     <div style={{ padding: "30px" }}>
 
+      {/* search bar */}
       <div ref={searchRef} style={{ position: "relative", marginBottom: "16px" }}>
         <div style={{ display: "flex", gap: "8px" }}>
           <input
@@ -162,29 +165,72 @@ function HomePage() {
             onChange={function(e) { setQuery(e.target.value) }}
             onKeyDown={handleKeyDown}
             onFocus={function() { if (suggestions.length > 0) setShowSuggestions(true) }}
-            style={{ flex: 1, background: "#1e1e2a", border: "1px solid #2a2a3a", color: "#e8e6f0", padding: "10px 16px", borderRadius: "8px", fontSize: "14px", outline: "none" }}
+            style={{
+              flex: 1, background: "#1e1e2a", border: "1px solid #2a2a3a",
+              color: "#e8e6f0", padding: "10px 16px", borderRadius: "8px",
+              fontSize: "14px", outline: "none",
+              transition: "border-color 0.2s ease"
+            }}
+            onFocusCapture={function(e) { e.target.style.borderColor = "#e63946" }}
+            onBlur={function(e) { e.target.style.borderColor = "#2a2a3a" }}
           />
-          <button onClick={handleSearch} style={{ background: "#e63946", border: "none", color: "#fff", padding: "10px 20px", borderRadius: "8px", cursor: "pointer", fontSize: "14px" }}>Search</button>
+          <button
+            onClick={handleSearch}
+            style={{
+              background: "#e63946", border: "none", color: "#fff",
+              padding: "10px 20px", borderRadius: "8px", cursor: "pointer",
+              fontSize: "14px", transition: "background 0.2s ease, transform 0.15s ease"
+            }}
+            onMouseEnter={function(e) { e.target.style.background = "#c1121f" }}
+            onMouseLeave={function(e) { e.target.style.background = "#e63946" }}
+            onMouseDown={function(e) { e.target.style.transform = "scale(0.96)" }}
+            onMouseUp={function(e) { e.target.style.transform = "scale(1)" }}
+          >
+            Search
+          </button>
           {(searchTerm || activeGenre) && (
-            <button onClick={handleClear} style={{ background: "transparent", border: "1px solid #2a2a3a", color: "#888899", padding: "10px 16px", borderRadius: "8px", cursor: "pointer", fontSize: "14px" }}>Clear</button>
+            <button
+              onClick={handleClear}
+              style={{
+                background: "transparent", border: "1px solid #2a2a3a",
+                color: "#888899", padding: "10px 16px", borderRadius: "8px",
+                cursor: "pointer", fontSize: "14px",
+                transition: "border-color 0.2s ease, color 0.2s ease"
+              }}
+              onMouseEnter={function(e) { e.currentTarget.style.borderColor = "#888899"; e.currentTarget.style.color = "#e8e6f0" }}
+              onMouseLeave={function(e) { e.currentTarget.style.borderColor = "#2a2a3a"; e.currentTarget.style.color = "#888899" }}
+            >
+              Clear
+            </button>
           )}
         </div>
 
         {showSuggestions && suggestions.length > 0 && (
-          <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#1e1e2a", border: "1px solid #2a2a3a", borderRadius: "8px", marginTop: "4px", zIndex: 100, overflow: "hidden" }}>
+          <div style={{
+            position: "absolute", top: "100%", left: 0, right: 0,
+            background: "#1e1e2a", border: "1px solid #2a2a3a",
+            borderRadius: "8px", marginTop: "4px", zIndex: 100,
+            overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+            animation: "fadeIn 0.15s ease"
+          }}>
             {suggestions.map(function(movie) {
               return (
                 <div
                   key={movie.id}
                   onClick={function() { handleSuggestionClick(movie) }}
-                  style={{ display: "flex", alignItems: "center", gap: "12px", padding: "8px 12px", cursor: "pointer", borderBottom: "0.5px solid #2a2a3a" }}
+                  style={{
+                    display: "flex", alignItems: "center", gap: "12px",
+                    padding: "8px 12px", cursor: "pointer",
+                    borderBottom: "0.5px solid #2a2a3a",
+                    transition: "background 0.15s ease"
+                  }}
                   onMouseEnter={function(e) { e.currentTarget.style.background = "#2a2a3a" }}
                   onMouseLeave={function(e) { e.currentTarget.style.background = "transparent" }}
                 >
                   <img src={"https://image.tmdb.org/t/p/w92" + movie.poster_path} alt={movie.title} style={{ width: "32px", height: "48px", objectFit: "cover", borderRadius: "4px", flexShrink: 0 }} />
                   <div>
                     <div style={{ fontSize: "13px", color: "#e8e6f0", fontWeight: "500" }}>{movie.title}</div>
-                    <div style={{ fontSize: "11px", color: "#888899", marginTop: "2px" }}>{movie.release_date?.slice(0, 4)} &nbsp; {"\u2605"} {movie.vote_average?.toFixed(1)}</div>
+                    <div style={{ fontSize: "11px", color: "#888899", marginTop: "2px" }}>{movie.release_date?.slice(0, 4)} &nbsp; ★ {movie.vote_average?.toFixed(1)}</div>
                   </div>
                 </div>
               )
@@ -193,6 +239,7 @@ function HomePage() {
         )}
       </div>
 
+      {/* category tabs */}
       <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
         {CATEGORIES.map(function(cat) {
           var active = activeCategory === cat.id && !activeGenre && !searchTerm
@@ -205,7 +252,8 @@ function HomePage() {
                 borderBottom: active ? "2px solid #e63946" : "2px solid transparent",
                 color: active ? "#fff" : "#888899",
                 padding: "8px 4px", cursor: "pointer",
-                fontSize: "14px", fontWeight: active ? "500" : "400"
+                fontSize: "14px", fontWeight: active ? "500" : "400",
+                transition: "color 0.2s ease, border-color 0.2s ease"
               }}
             >
               {cat.name}
@@ -214,22 +262,32 @@ function HomePage() {
         })}
       </div>
 
+      {/* genre chips */}
       <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "24px" }}>
         {GENRES.map(function(genre) {
+          var active = activeGenre === genre.id
           return (
-            <button key={genre.id} onClick={function() { handleGenre(genre.id) }} style={{
-              background: activeGenre === genre.id ? "#e63946" : "#1e1e2a",
-              border: activeGenre === genre.id ? "1px solid #e63946" : "1px solid #2a2a3a",
-              color: activeGenre === genre.id ? "#fff" : "#888899",
-              padding: "5px 14px", borderRadius: "20px",
-              cursor: "pointer", fontSize: "12px"
-            }}>
+            <button
+              key={genre.id}
+              onClick={function() { handleGenre(genre.id) }}
+              style={{
+                background: active ? "#e63946" : "#1e1e2a",
+                border: active ? "1px solid #e63946" : "1px solid #2a2a3a",
+                color: active ? "#fff" : "#888899",
+                padding: "5px 14px", borderRadius: "20px",
+                cursor: "pointer", fontSize: "12px",
+                transition: "background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.15s ease"
+              }}
+              onMouseEnter={function(e) { if (!active) e.currentTarget.style.transform = "scale(1.05)" }}
+              onMouseLeave={function(e) { e.currentTarget.style.transform = "scale(1)" }}
+            >
               {genre.name}
             </button>
           )
         })}
       </div>
 
+      {/* section header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "12px" }}>
         <h2 style={{ fontSize: "18px", fontWeight: "500", color: "#fff" }}>{sectionLabel}</h2>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -247,13 +305,23 @@ function HomePage() {
         </div>
       </div>
 
-      {loading && <div style={{ color: "#888899", fontSize: "14px", padding: "40px 0", textAlign: "center" }}>Loading movies...</div>}
       {error && <div style={{ color: "#e63946", fontSize: "14px" }}>Error: {error}</div>}
 
-      {!loading && !error && (
-        <div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(9, 1fr)", gap: "16px" }}>
-            {sortedMovies.map(function(movie) {
+      {/* grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(9, 1fr)", gap: "16px" }}>
+        {loading
+          ? skeletons.map(function(_, i) {
+              return (
+                <div key={i} className="card-skeleton">
+                  <div className="skeleton-poster" />
+                  <div className="skeleton-info">
+                    <div className="skeleton-line" />
+                    <div className="skeleton-line short" />
+                  </div>
+                </div>
+              )
+            })
+          : sortedMovies.map(function(movie) {
               return (
                 <MovieCard
                   key={movie.id}
@@ -264,31 +332,50 @@ function HomePage() {
                   poster={movie.poster_path ? "https://image.tmdb.org/t/p/w500" + movie.poster_path : null}
                 />
               )
-            })}
-          </div>
+            })
+        }
+      </div>
 
-          {movies.length > 0 && page < totalPages && (
-            <div style={{ textAlign: "center", marginTop: "48px", marginBottom: "20px" }}>
-              <div style={{ color: "#888899", fontSize: "12px", marginBottom: "12px" }}>Showing {movies.length} movies</div>
-              <button
-                onClick={loadMore}
-                disabled={loadingMore}
-                style={{ background: "transparent", border: "1px solid #e63946", color: loadingMore ? "#888899" : "#e63946", padding: "12px 40px", borderRadius: "30px", cursor: loadingMore ? "not-allowed" : "pointer", fontSize: "14px", fontWeight: "500" }}
-                onMouseEnter={function(e) { if (!loadingMore) { e.target.style.background = "#e63946"; e.target.style.color = "#fff" } }}
-                onMouseLeave={function(e) { if (!loadingMore) { e.target.style.background = "transparent"; e.target.style.color = "#e63946" } }}
-              >
-                {loadingMore ? "Loading..." : "Load More"}
-              </button>
-              <div style={{ color: "#444", fontSize: "11px", marginTop: "10px" }}>Page {page} of {totalPages}</div>
-            </div>
-          )}
-
-          {movies.length > 0 && page >= totalPages && (
-            <div style={{ textAlign: "center", marginTop: "40px", color: "#444", fontSize: "13px" }}>You have reached the end</div>
-          )}
+      {/* load more */}
+      {!loading && movies.length > 0 && page < totalPages && (
+        <div style={{ textAlign: "center", marginTop: "48px", marginBottom: "20px" }}>
+          <div style={{ color: "#888899", fontSize: "12px", marginBottom: "12px" }}>Showing {movies.length} movies</div>
+          <button
+            onClick={loadMore}
+            disabled={loadingMore}
+            style={{
+              background: "transparent", border: "1px solid #e63946",
+              color: loadingMore ? "#888899" : "#e63946",
+              padding: "12px 40px", borderRadius: "30px",
+              cursor: loadingMore ? "not-allowed" : "pointer",
+              fontSize: "14px", fontWeight: "500",
+              transition: "background 0.2s ease, color 0.2s ease, transform 0.15s ease"
+            }}
+            onMouseEnter={function(e) { if (!loadingMore) { e.target.style.background = "#e63946"; e.target.style.color = "#fff" } }}
+            onMouseLeave={function(e) { if (!loadingMore) { e.target.style.background = "transparent"; e.target.style.color = "#e63946" } }}
+            onMouseDown={function(e) { if (!loadingMore) e.target.style.transform = "scale(0.97)" }}
+            onMouseUp={function(e) { e.target.style.transform = "scale(1)" }}
+          >
+            {loadingMore ? "Loading..." : "Load More"}
+          </button>
+          <div style={{ color: "#444", fontSize: "11px", marginTop: "10px" }}>Page {page} of {totalPages}</div>
         </div>
       )}
 
+      {!loading && movies.length > 0 && page >= totalPages && (
+        <div style={{ textAlign: "center", marginTop: "40px", color: "#444", fontSize: "13px" }}>You have reached the end</div>
+      )}
+
+      <style>{`
+        @keyframes shimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(-4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   )
 }
