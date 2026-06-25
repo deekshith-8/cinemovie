@@ -2,15 +2,12 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 function MovieCard({ id, title, year, rating, poster }) {
-
   const [liked, setLiked] = useState(false)
   const [likeCount, setLikeCount] = useState(0)
-
-  // useNavigate gives you a function to change the URL
+  const [imgLoaded, setImgLoaded] = useState(false)
   const navigate = useNavigate()
 
   function handleLike(e) {
-    // e.stopPropagation stops the click from also triggering the card click
     e.stopPropagation()
     if (liked) {
       setLiked(false)
@@ -22,17 +19,27 @@ function MovieCard({ id, title, year, rating, poster }) {
   }
 
   function handleCardClick() {
-    // this changes the URL to /movie/123
-    // React Router sees this and renders DetailPage
     navigate(`/movie/${id}`)
   }
 
   return (
     <div className="card" onClick={handleCardClick}>
-      {poster
-        ? <img src={poster} alt={title} className="card-poster" />
-        : <div className="card-poster card-no-poster">No Image</div>
-      }
+      {poster ? (
+        <>
+          {!imgLoaded && (
+            <div className="card-poster" style={{ background: 'linear-gradient(90deg, #1e1e2a 25%, #2a2a3a 50%, #1e1e2a 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s infinite' }} />
+          )}
+          <img
+            src={poster}
+            alt={title}
+            className="card-poster"
+            style={{ display: imgLoaded ? 'block' : 'none' }}
+            onLoad={() => setImgLoaded(true)}
+          />
+        </>
+      ) : (
+        <div className="card-poster card-no-poster">No Image</div>
+      )}
 
       <button
         className={liked ? "like-btn liked" : "like-btn"}
